@@ -46,10 +46,10 @@ export const siteConfig: SiteConfig = {
   country: "India",
   year: 2026,
   socials: [
-    { name: "LinkedIn", url: "https://linkedin.com", icon: "FaLinkedin" },
-    { name: "Facebook", url: "https://facebook.com", icon: "FaFacebook" },
-    { name: "Instagram", url: "https://instagram.com", icon: "FaInstagram" },
-    { name: "YouTube", url: "https://youtube.com", icon: "FaYoutube" },
+    { name: "LinkedIn", url: "https://www.linkedin.com/company/vidya-vriddhi", icon: "FaLinkedin" },
+    { name: "Facebook", url: "https://www.facebook.com/p/VidyaVriddhi-61559924065338/", icon: "FaFacebook" },
+    { name: "Instagram", url: "https://www.instagram.com/vidyavriddhi?igsh=N3NoeGRlOG4ycTB6", icon: "FaInstagram" },
+    { name: "YouTube", url: "https://www.youtube.com/@vidyavriddhi-u6y", icon: "FaYoutube" },
   ],
   legal: {
     disclaimer:
