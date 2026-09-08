@@ -15,7 +15,11 @@ if (!cached) {
 export async function connectDB() {
   if (cached.conn) return cached.conn;
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI).then((m) => m.connection || m);
+    const opts = {
+      bufferCommands: false,
+      serverSelectionTimeoutMS: 5000,
+    };
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((m) => m.connection || m);
   }
   cached.conn = await cached.promise;
   return cached.conn;

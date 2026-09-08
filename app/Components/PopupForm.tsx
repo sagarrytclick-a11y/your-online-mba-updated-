@@ -6,15 +6,26 @@ import { counsellingSchema } from "../lib/validation";
 
 const PopupForm = () => {
   const { isOpen, close } = usePopupForm();
-  const [form, setForm] = useState({ name: "", phone: "", email: "", specialization: "", city: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", specialization: "", city: "", website: "" });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setFieldErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+    const { name, value } = e.target;
+    
+    // Numeric only validation for phone
+    if (name === "phone") {
+      const numericValue = value.replace(/[^0-9]/g, "");
+      if (numericValue.length <= 15) {
+        setForm({ ...form, [name]: numericValue });
+      }
+    } else {
+      setForm({ ...form, [name]: value });
+    }
+    
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,10 +51,13 @@ const PopupForm = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error("Failed to send");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to send");
+      }
       setSubmitted(true);
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -53,7 +67,7 @@ const PopupForm = () => {
     close();
     setTimeout(() => {
       setSubmitted(false);
-      setForm({ name: "", phone: "", email: "", specialization: "", city: "" });
+      setForm({ name: "", phone: "", email: "", specialization: "", city: "", website: "" });
       setError("");
     }, 300);
   };
@@ -90,9 +104,11 @@ const PopupForm = () => {
             <h3 className="text-[#C81E3D] text-center text-lg sm:text-xl font-bold mb-6 tracking-wide">
               Free Expert Counselling
             </h3>
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              <div>
-                <input
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                  {/* Honeypot field for bots */}
+                  <input type="text" name="website" style={{ display: 'none' }} onChange={handleChange} value={(form as any).website || ''} tabIndex={-1} autoComplete="off" />
+                  <div>
+                    <input
                   name="name" value={form.name} onChange={handleChange}
                   type="text" required placeholder="Name *"
                   className="w-full h-12 px-4 border border-gray-250 rounded-[10px] text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-[#C81E3D] focus:ring-1 focus:ring-[#C81E3D]/30 transition-all font-medium"

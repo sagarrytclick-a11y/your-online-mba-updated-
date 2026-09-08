@@ -23,7 +23,12 @@ export const metadata: Metadata = {
     "LPU online MBA", "Amity online MBA", "NMIMS online MBA", "Manipal online MBA",
     "Chandigarh University online MBA", "online MBA fees", "top MBA universities India",
   ],
-  icons: { icon: "/logo.png", apple: "/logo.png" },
+  icons: { 
+    icon: "/logo.png", 
+    apple: "/logo.png",
+    shortcut: "/logo.png",
+  },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "Online MBA - Top UGC-Approved Universities & Programs 2026",
     description:
@@ -45,8 +50,18 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
-  verification: { google: "" },
-  alternates: { canonical: siteUrl },
+  verification: { 
+    google: "YOUR_GOOGLE_VERIFICATION_CODE", // User should replace this
+    yandex: "yandex-verification-code",
+    yahoo: "yahoo-verification-code",
+  },
+  alternates: { 
+    canonical: siteUrl,
+    languages: {
+      'en-IN': siteUrl,
+    },
+  },
+  category: 'education',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

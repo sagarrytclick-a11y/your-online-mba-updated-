@@ -4,16 +4,41 @@ import { connectDB } from "@/app/lib/db";
 import { Enquiry } from "@/app/models/Enquiry";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
-const fromEmail = process.env.RESEND_FROM_EMAIL!;
+const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 const toEmail = process.env.RESEND_TO_EMAIL!;
+
+// Simple in-memory rate limiting
+const rateLimit = new Map<string, number>();
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
+const MAX_SUBMISSIONS = 5;
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, phone, email, specialization, city } = await req.json();
+    // Basic Rate Limiting based on IP
+    const ip = req.headers.get("x-forwarded-for") || "anonymous";
+    const now = Date.now();
+    const userSubmissions = rateLimit.get(ip) || 0;
 
-    if (!name || !phone || !email || !specialization || !city) {
-      return NextResponse.json({ error: "All fields are required" }, { status: 400 });
+    if (userSubmissions >= MAX_SUBMISSIONS) {
+      return NextResponse.json(
+        { error: "Too many submissions. Please try again later." },
+        { status: 429 }
+      );
     }
+
+    const body = await req.json();
+    
+    // Honeypot check for bots
+    if (body.website) {
+      return NextResponse.json({ success: true, message: "Request received" });
+    }
+
+    const result = counsellingSchema.safeParse(body);
+    if (!result.success) {
+      return NextResponse.json({ error: "Invalid form data", details: result.error.format() }, { status: 400 });
+    }
+
+    const { name, phone, email, specialization, city } = result.data;
 
     await connectDB();
     const enquiry = await Enquiry.create({ name, phone, email, specialization, city });
@@ -36,8 +61,14 @@ export async function POST(req: NextRequest) {
     });
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      console.error("Resend Error:", error);
+      return NextResponse.json({ error: "Failed to send email notification. However, your request has been saved." }, { status: 500 });
     }
+
+    // Update rate limit
+    rateLimit.set(ip, userSubmissions + 1);
+    // Cleanup old rate limits occasionally (naive)
+    setTimeout(() => rateLimit.delete(ip), RATE_LIMIT_WINDOW);
 
     return NextResponse.json({ success: true, id: enquiry._id });
   } catch (err) {

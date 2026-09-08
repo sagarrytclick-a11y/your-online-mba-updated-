@@ -20,8 +20,30 @@ const SYSTEM_PROMPT = `You are CourseMate AI, a helpful assistant for Your Onlin
 
 const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
 
+// Simple in-memory rate limiting
+const chatRateLimit = new Map<string, { count: number; lastReset: number }>();
+const CHAT_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour
+const MAX_CHAT_MESSAGES = 10;
+
 export async function POST(req: NextRequest) {
   const API_KEY = (process.env.GROQ_API_KEY || "").trim();
+  
+  // Rate limiting based on IP
+  const ip = req.headers.get("x-forwarded-for") || "anonymous";
+  const now = Date.now();
+  const userRate = chatRateLimit.get(ip) || { count: 0, lastReset: now };
+
+  if (now - userRate.lastReset > CHAT_LIMIT_WINDOW) {
+    userRate.count = 0;
+    userRate.lastReset = now;
+  }
+
+  if (userRate.count >= MAX_CHAT_MESSAGES) {
+    return NextResponse.json(
+      { error: "Chat limit reached for this hour. Please try again later or contact us directly." },
+      { status: 429 }
+    );
+  }
 
   if (!API_KEY) {
     return NextResponse.json(
@@ -74,6 +96,11 @@ export async function POST(req: NextRequest) {
     }
 
     const data = await response.json();
+    
+    // Increment chat count
+    userRate.count += 1;
+    chatRateLimit.set(ip, userRate);
+
     return NextResponse.json({
       message: data.choices[0].message,
     });

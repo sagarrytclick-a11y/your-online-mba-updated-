@@ -5,15 +5,26 @@ import { Check, ChevronDown, GraduationCap, Briefcase, Star, Landmark, Loader2 }
 import { counsellingSchema } from '../lib/validation';
 
 const HeroSection = () => {
-  const [form, setForm] = useState({ name: "", phone: "", email: "", specialization: "", city: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", specialization: "", city: "", website: "" });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setFieldErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+    const { name, value } = e.target;
+    
+    // Numeric only validation for phone
+    if (name === "phone") {
+      const numericValue = value.replace(/[^0-9]/g, "");
+      if (numericValue.length <= 15) {
+        setForm({ ...form, [name]: numericValue });
+      }
+    } else {
+      setForm({ ...form, [name]: value });
+    }
+    
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,10 +50,13 @@ const HeroSection = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error("Failed to send");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to send");
+      }
       setSubmitted(true);
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -132,6 +146,8 @@ const HeroSection = () => {
             ) : (
               <>
                 <form className="space-y-4" onSubmit={handleSubmit}>
+                  {/* Honeypot field for bots */}
+                  <input type="text" name="website" style={{ display: 'none' }} onChange={handleChange} value={(form as any).website || ''} tabIndex={-1} autoComplete="off" />
                   <div>
                     <input
                       name="name" value={form.name} onChange={handleChange}

@@ -6,15 +6,26 @@ import { counsellingSchema } from '../../lib/validation';
 import { siteConfig } from '../../data/site';
 
 export default function ContactUs() {
-  const [form, setForm] = useState({ name: "", phone: "", email: "", specialization: "", city: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", specialization: "", city: "", website: "" });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setFieldErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+    const { name, value } = e.target;
+    
+    // Numeric only validation for phone
+    if (name === "phone") {
+      const numericValue = value.replace(/[^0-9]/g, "");
+      if (numericValue.length <= 15) {
+        setForm({ ...form, [name]: numericValue });
+      }
+    } else {
+      setForm({ ...form, [name]: value });
+    }
+    
+    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,10 +51,13 @@ export default function ContactUs() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      if (!res.ok) throw new Error("Failed to send");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to send");
+      }
       setSubmitted(true);
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -136,6 +150,8 @@ export default function ContactUs() {
                   </div>
 
                   <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* Honeypot field for bots */}
+                    <input type="text" name="website" style={{ display: 'none' }} onChange={handleChange} value={(form as any).website || ''} tabIndex={-1} autoComplete="off" />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <input
