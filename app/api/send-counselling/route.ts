@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { connectDB } from "@/app/lib/db";
 import { Enquiry } from "@/app/models/Enquiry";
+import { counsellingSchema } from "@/app/lib/validation";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
