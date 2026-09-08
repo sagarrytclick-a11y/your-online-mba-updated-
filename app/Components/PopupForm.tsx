@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, ChevronDown, Check, Loader2 } from "lucide-react";
 import { usePopupForm } from "../context/PopupFormContext";
 import { counsellingSchema } from "../lib/validation";
@@ -11,6 +11,15 @@ const PopupForm = () => {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (submitted) {
+      const timer = setTimeout(() => {
+        handleClose();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [submitted]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
