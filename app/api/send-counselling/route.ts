@@ -62,8 +62,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (error) {
-      console.error("Resend Error:", error);
-      return NextResponse.json({ error: "Failed to send email notification. However, your request has been saved." }, { status: 500 });
+      console.error("Resend Error (Entry saved in DB but email failed):", error);
     }
 
     // Update rate limit
