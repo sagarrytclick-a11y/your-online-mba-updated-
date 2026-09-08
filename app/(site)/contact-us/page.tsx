@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as Icons from 'lucide-react';
 import { counsellingSchema } from '../../lib/validation';
 import { siteConfig } from '../../data/site';
@@ -11,6 +11,16 @@ export default function ContactUs() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (submitted) {
+      const timer = setTimeout(() => {
+        setSubmitted(false);
+        setForm({ name: "", phone: "", email: "", specialization: "", city: "", website: "" });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [submitted]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

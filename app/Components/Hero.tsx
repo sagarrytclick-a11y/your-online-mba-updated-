@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Check, ChevronDown, GraduationCap, Briefcase, Star, Landmark, Loader2 } from 'lucide-react';
 
 import { counsellingSchema } from '../lib/validation';
@@ -10,6 +10,16 @@ const HeroSection = () => {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (submitted) {
+      const timer = setTimeout(() => {
+        setSubmitted(false);
+        setForm({ name: "", phone: "", email: "", specialization: "", city: "", website: "" });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [submitted]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
